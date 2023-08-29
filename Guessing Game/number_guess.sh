@@ -1,13 +1,14 @@
 #!/bin/bash
 PSQL="psql --username=freecodecamp --dbname=number_guess -t --no-align -c"
-SECRETNUMBER= $(( $RANDOM % 1000 +1 ))
+SECRETNUMBER=$(( $RANDOM % 1000 + 1 ))
+
 
 echo -e "\n--Number Guessing Game--\n"
-echo -e "First let me sign you up.\n"
-
+echo -e "\nFirst let me sign you up.\n"
+echo -e "$SECRETNUMBER"
 
 ASKUSERNAME(){
-echo -e "Enter your username:"
+echo -e "\nEnter your username:"
 read NAME
 # length check
 NUM_OF_CHAR=$(echo $USERNAME | wc -c)
@@ -29,36 +30,37 @@ echo -e "Welcome, $NAME! It looks like this is your first time here."
 else
 GAMES=$($PSQL "SELECT COUNT(*) FROM games INNER JOIN users USING(user_id) WHERE username = '$NAME'")
 BEST_GAME=$($PSQL "SELECT MIN(guesses) FROM games INNER JOIN users USING(user_id) WHERE username = '$NAME'")
-echo "Welcome back, '$NAME'! You have played '$GAMES' games, and your best game took '$BEST_GAME' guesses."
+  GAMES=$(if [[ $GAMES_PLAYED -eq 1 ]]; then echo "game"; else echo "games"; fi)
+  GUESSES=$(if [[ $BEST_GAME -eq 1 ]]; then echo "guess"; else echo "guesses"; fi)
+  echo -e "\nWelcome back, $NAME! You have played $GAMES games, and your best game took $BEST_GAME guesses."
 fi
 
 USER_ID=$($PSQL "SELECT user_id FROM users WHERE username = '$NAME'")
 TRIES=1
-GUESSES=0
+PLAYERGUESS=0
 
 GUESSING_GAME(){
 
 
 read PLAYERGUESS
 
-while [[ $GUESS =~ ^[+-]?[0-9]+$ && ! $GUESS -eq $SECRET_NUMBER ]]
+while [[ $PLAYERGUESS =~ ^[+-]?[0-9]+$ && ! $PLAYERGUESS -eq $SECRET_NUMBER ]]
 do
-TRIES= $(expr $TRIES  +1)
+TRIES=$(expr $TRIES + 1)
+if [[ $PLAYERGUESS -lt $SECRETNUMBER ]]
 
+then
+echo -e "\nIt's higher than that, guess again:"
+read PLAYERGUESS
 
-
-
-if [[ $PLAYERGUESS -gt $SECRETNUMBER ]]
+elif [[ $PLAYERGUESS -gt $SECRETNUMBER ]]
 
 then
 echo -e "\nIt's lower than that, guess again:"
 read PLAYERGUESS
 
-elif [[ $PLAYERGUESS -lt $SECRETNUMBER ]]
 
-then
-echo -e "\nIt's higher than that, guess again:"
-read PLAYERGUESS
+
 fi
 done
 
@@ -66,14 +68,15 @@ done
 if [[ ! $PLAYERGUESS =~ ^[0-9]+$ ]]
 then
 echo "That is not an integer, guess again:"
-TRIES=$(expr $TRIES  +1)
+TRIES=$(expr $TRIES + 1)
 GUESSING_GAME
 fi
 
 }
-echo "Guess a number between 1 - 1000:"
+echo -e "\nGuess the secret number between 1 and 1000:"
 GUESSING_GAME
 
-INSERT_GAME=$($PSQL "INSERT INTO games(user_id, guesses) VALUES ($USER_ID, $TRIES)")
-MANY_TRIES=$(if [[ $TRIES -eq 1 ]]; then echo "try"; else echo "tries"; fi)
+INSERTED_GAME=$($PSQL "INSERT INTO games (user_id, guesses) VALUES ($USER_ID, $TRIES)")
+PLURAL_TRIES=$(if [[ $TRIES -eq 1 ]]; then echo "try"; else echo "tries"; fi)
 echo -e "\nYou guessed it in $TRIES tries. The secret number was $SECRET_NUMBER. Nice job!"
+
