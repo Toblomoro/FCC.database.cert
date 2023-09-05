@@ -30,8 +30,6 @@ echo -e "Welcome, $NAME! It looks like this is your first time here."
 else
 GAMES=$($PSQL "SELECT COUNT(*) FROM games INNER JOIN users USING(user_id) WHERE username = '$NAME'")
 BEST_GAME=$($PSQL "SELECT MIN(guesses) FROM games INNER JOIN users USING(user_id) WHERE username = '$NAME'")
-  # GAMES=$(if [[ $GAMES_PLAYED -eq 1 ]]; then echo "game"; else echo "games"; fi)
-  # GUESSES=$(if [[ $BEST_GAME -eq 1 ]]; then echo "guess"; else echo "guesses"; fi)
   echo -e "\nWelcome back, $NAME! You have played $GAMES games, and your best game took $BEST_GAME guesses."
 fi
 
